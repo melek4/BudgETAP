@@ -1,0 +1,249 @@
+{% extends 'layouts/base.html' %}
+{% block head %}<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>{% endblock %}
+{% block title %} subsubCategories {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="opacity-5 breadcrumb-item text-sm">
+    Management
+  </li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'dep_management' %}">Directions</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'subdep_management' department.id %}">SubDirections</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'cat_management' subdepartment.id %}">Categories</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'subcat_management' category.id %}">SubCategories</a></li>
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'subsubcat_management' subcategory.id %}">SubSubCategories</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <h6>{{ subcategory.name }}'s subsubCategories</h6>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2"></th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                      <th class="text-secondary opacity-7"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for subsubcategory in subsubcategories %}
+                    <tr id="subsubcategory-{{ subsubcategory.id }}" data-subsubcategory-id="{{ subsubcategory.id }}" data-subcategory-id="{{ subcategory.id }}" data-subsubcategory-name="{{ subsubcategory.name }}">
+                      <td>
+                        <div class="d-flex px-2 py-1">
+                          <div class="d-flex flex-column">
+                            <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ subsubcategory.name }}</h6>
+                          </div>
+                        </div>
+                      </td>
+                      <td></td>
+                      <td class="align-middle text-center text-sm">
+                        <button class="delete-subsubcategory btn bg-gradient-danger" data-subsubcategory-id="{{ subsubcategory.id }}">delete</button>
+                        <button class="modify-subsubcategory btn bg-gradient-info" data-subsubcategory-id="{{ subsubcategory.id }}">edit</button>
+                        
+                        <button class="save-subsubcategory btn" data-subsubcategory-id="{{ subsubcategory.id }}" style="display: none;">confirm</button>
+                        <button class="cancel-modify btn" data-subsubcategory-id="{{ subsubcategory.id }}" style="display: none;">cancel</button>
+                      </td>
+                      <td class="align-middle text-center"></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- Add subsubcategory button -->
+              <button id="show-add-subsubcategory-form" class="btn" style="margin:20px 20px 20px;">add</button>
+
+              <!-- Add subsubcategory form -->
+              <form id="add-subsubcategory-form" style="display: none;">
+                <div class="form-group">
+                  <input type="text" id="subsubcategory-name-input" class="form-control" placeholder="subsubcategory Name" style="margin:20px 20px 20px; width:30%;">
+                </div>
+                <button type="submit" class="btn" style="margin:10px 5px 20px 20px;">confirm</button>
+                <button id="cancel-add-subsubcategory" class="btn" style="margin:1 20px 20px 5px;">cancel</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+<script>
+  $(document).ready(function() {
+      // Function to add a new sub row to the table
+      function addsubsubCategoryRow(subsubcategoryId, subsubcategoryName, subcategoryId) {
+        var subsubcategoryRow = `
+          <tr id="subsubcategory-${subsubcategoryId}" data-subsubcategory-name="${subsubcategoryName}" data-subsubcategory-id="${subsubcategoryId}" data-subcategory-id="${subcategoryId}">
+            <td>
+              <div class="d-flex px-2 py-1">
+                <div class="d-flex flex-column">
+                  <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">${subsubcategoryName}</h6>
+                </div>
+              </div>
+            </td>
+            <td></td>
+            <td class="align-middle text-center text-sm">
+              <button class="delete-subsubcategory btn bg-gradient-danger" data-subsubcategory-id="${subsubcategoryId}">delete</button>
+              <button class="modify-subsubcategory btn bg-gradient-info" data-subsubcategory-id="${subsubcategoryId}">edit</button>
+
+              <button class="save-subsubcategory btn" data-subsubcategory-id="${subsubcategoryId}" style="display: none;">confirm</button>
+              <button class="cancel-modify btn" data-subsubcategory-id="${subsubcategoryId}" style="display: none;">cancel</button>
+            </td>
+            <td class="align-middle text-center"></td>
+          </tr>
+        `;
+        $("tbody").append(subsubcategoryRow);
+      }
+
+      // Show Add subsubcategory form
+      $("#show-add-subsubcategory-form").on("click", function() {
+        $("#add-subsubcategory-form").show();
+      });
+
+      // Cancel Add subsubcategory button click event
+      $("#cancel-add-subsubcategory").on("click", function(e) {
+        e.preventDefault();
+        $("#subsubcategory-name-input").val('');
+        $("#add-subsubcategory-form").hide();
+      });
+
+      // Add subsubcategory form submit event
+      $("#add-subsubcategory-form").on("submit", function(e) {
+        e.preventDefault();
+        var subsubcategoryName = $("#subsubcategory-name-input").val();
+        var subcategoryId = "{{subcategory.id}}";
+
+        // Perform the AJAX request to add the subsubcategory
+        $.ajax({
+          url: 'create_subsubcategory/',
+          type: 'POST',
+          data: {
+            subcategory_id: subcategoryId,
+            subsubcategory_name: subsubcategoryName,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            // Handle the success response
+            var subsubcategoryId = response.subsubcategory_id;
+            addsubsubCategoryRow(subsubcategoryId, subsubcategoryName, subcategoryId);
+            $("#subsubcategory-name-input").val('');
+            $("#add-subsubcategory-form").hide();
+          },
+          error: function(xhr, errmsg, err) {
+            // Handle the error response
+            console.log(xhr.status + ": " + xhr.responseText);
+          }
+        });
+      });
+      // Delete subsubcategory button click event
+      $(document).on("click", ".delete-subsubcategory", function() {
+        var subsubcategoryId = $(this).data("subsubcategory-id");
+        var subsubcategoryRow = $(this).closest("tr");
+
+        // Display confirmation prompt before deleting the subsubcategory
+        var confirmDelete = confirm("Are you sure you want to delete this subsubcategory?");
+        if (confirmDelete) {
+          // Perform the AJAX request to delete the subsubcategory
+          $.ajax({
+            url: 'delete_subsubcategory/' + subsubcategoryId + '/',
+            type: 'POST',
+            data: {
+              subsubcategory_id: subsubcategoryId,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+              // Handle the success response
+              subsubcategoryRow.remove();
+            },
+            error: function(xhr, errmsg, err) {
+              // Handle the error response
+              console.log(xhr.status + ": " + xhr.responseText);
+            }
+          });
+        }
+      });
+
+      // Modify subsubcategory button click event
+      $(document).on("click", ".modify-subsubcategory", function() {
+        var subsubcategoryId = $(this).data("subsubcategory-id");
+        var subsubcategoryRow = $("#subsubcategory-" + subsubcategoryId);
+        var currentsubsubcategoryName = subsubcategoryRow.data("subsubcategory-name");
+        // Hide the Modify button and show the Save and Cancel buttons
+        $(this).hide();
+        $(`.save-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).show();
+        $(`.cancel-modify[data-subsubcategory-id="${subsubcategoryId}"]`).show();
+        $(`.delete-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).hide();
+
+        // Create an input field with the current subsubcategory name
+        var inputField = `<input type="text" id="input-subsubcategory-name-${subsubcategoryId}" value="${currentsubsubcategoryName}" class="form-control" style="margin:0px 10px 0px; width:30%" />`;
+
+        // Replace the subsubcategory name with the input field
+        $("#subsubcategory-" + subsubcategoryId + " td:first-child").html(inputField);
+        // Store the current subsubcategory name as a data attribute
+        subsubcategoryRow.data("subsubcategory-name", currentsubsubcategoryName);
+      });
+
+      // Cancel Modify button click event
+      $(document).on("click", ".cancel-modify", function() {
+        var subsubcategoryId = $(this).data("subsubcategory-id");
+        var subsubcategoryRow = $("#subsubcategory-" + subsubcategoryId);
+        var subsubcategoryName = subsubcategoryRow.data("subsubcategory-name");
+        // Show the Modify button and hide the Save and Cancel buttons
+        $(`.modify-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).show();
+        $(`.delete-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).show();
+        $(`.save-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).hide();
+        $(this).hide();
+
+        $("#subsubcategory-" + subsubcategoryId + " td:first-child").text(subsubcategoryName);
+      });
+
+      // Save subsubcategory button click event
+      $(document).on("click", ".save-subsubcategory", function() {
+        var subsubcategoryId = $(this).data("subsubcategory-id");
+        var subcategoryId = "{{subcategory.id}}";
+        // Get the updated subsubcategory name from the input field
+        var updatedsubsubcategoryName = $("#input-subsubcategory-name-" + subsubcategoryId).val();
+
+        // Perform the AJAX request to update the subsubcategory
+        $.ajax({
+          url: 'modify_subsubcategory/' + subsubcategoryId + '/',
+          type: 'POST',
+          data: {
+            subcategory: subcategoryId,
+            name: updatedsubsubcategoryName,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            // Handle the success response
+            $("#subsubcategory-" + subsubcategoryId + " td:first-child").text(updatedsubsubcategoryName);
+
+            // Show the Modify button and hide the Save and Cancel buttons
+            $(`.modify-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).show();
+            $(`.delete-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).show();
+            $(`.save-subsubcategory[data-subsubcategory-id="${subsubcategoryId}"]`).hide();
+            $(`.cancel-modify[data-subsubcategory-id="${subsubcategoryId}"]`).hide();
+          },
+          error: function(xhr, errmsg, err) {
+            // Handle the error response
+            console.log(xhr.status + ":" + xhr.responseText);
+          }
+        });
+      });
+    });
+</script>
+{% endblock javascripts %}

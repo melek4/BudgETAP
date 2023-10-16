@@ -1,0 +1,40 @@
+{% extends 'layouts/base.html' %}
+{% block head %}<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>{% endblock %}
+{% block title %} Departments {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'budget_comparison_dep'%}">Budget Comparison</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+
+        <div class="row">
+            <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                <h6>Departments Budget</h6>
+                </div>
+                <form  method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="year1"><h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">Year 1</h6></label>
+                        <input type="number" id="year1" name="year1" required class="form-control" style="width:10%;margin:0px 20px 0px;">
+                        <label for="year2"><h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">Year 2</h6></label>
+                        <input type="number" id="year2" name="year2" required class="form-control" style="width:10%;margin:0px 20px 0px;">
+                        <button type="submit" class="btn" style="margin:20px 20px 20px;">Submit</button>
+                    </div>
+                </form>
+                <div id="table-container"></div>
+            </div>
+            </div>
+        </div>
+        {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+

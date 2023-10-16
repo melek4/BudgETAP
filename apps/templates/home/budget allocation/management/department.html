@@ -1,0 +1,198 @@
+{% extends 'layouts/base.html' %}
+{% block head %}<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>{% endblock %}
+{% block title %} Departments {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="opacity-5 breadcrumb-item text-sm">
+    Budget Management
+  </li>
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'depBudgetAllocationListView' %}">Directions</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+
+        <div class="row">
+            <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                <h6>Budget Allocations table</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                        <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7">Direction</th>
+                        <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ps-2">Year</th>
+                        <th class="text-uppercase text-secondary text-xs font-weight-bolder opacity-7 ps-2">Budget</th>
+                        <th class="text-uppercase text-center text-secondary text-xs font-weight-bolder opacity-7 ps-2">Description</th>
+                        <th class="text-uppercase text-center text-secondary text-xs font-weight-bolder opacity-7 ps-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for department in departments %}
+                        <tr>
+                        <td>
+                            <div class="d-flex px-2 py-1">
+                            <div class="d-flex flex-column">
+                                <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ department.name }}</h6>
+                            </div>
+                            </div>
+                        </td>
+                        <td colspan="3"></td>
+                        <td class="align-middle text-center text-sm"><a href="{% url 'SubDepBudgetAllocationView' department.id %}" type="button" class="btn bg-gradient-secondary" data-department-id="{{ department.id }}">SubDirections</a></td>
+                        </tr>
+                        {% for budget_allocation in department.budgetallocation_set.all %}
+                        <tr id="budget-allocation-{{ budget_allocation.id }}"
+                        data-year="{{ budget_allocation.year }}"
+                        data-budget="{{ budget_allocation.budget }}"
+                        data-description="{{ budget_allocation.description }}">
+                        <td></td>
+                        <td class="text-uppercase text-secondary text-s font-weight-bolder opacity-7 ps-2">{{ budget_allocation.year }}</td>
+                        <td class="text-uppercase text-secondary text-s font-weight-bolder opacity-7 ps-2">{{ budget_allocation.budget }}</td>
+                        <td class="text-center text-secondary text-s font-weight-bolder opacity-7 ps-2">{{ budget_allocation.description }}</td>
+                        <td class="align-middle text-center text-sm">
+                            <button class="delete-budget btn bg-gradient-danger" data-budget-allocation-id="{{ budget_allocation.id }}">delete</button>
+                            <button class="modify-budget btn bg-gradient-info" data-budget-allocation-id="{{ budget_allocation.id }}">edit</button>
+                            <button class="save-budget btn" data-budget-allocation-id="{{ budget_allocation.id }}" style="display: none;">confirm</button>
+                            <button class="cancel-modify btn" data-budget-allocation-id="{{ budget_allocation.id }}" style="display: none;">cancel</button>
+                        </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+<script>
+  $(document).ready(function() {
+    // Modify Budget button click event
+    $(document).on("click", ".modify-budget", function() {
+      var budgetAllocationId = $(this).data("budget-allocation-id");
+      var budgetRow = $("#budget-allocation-" + budgetAllocationId);
+
+      // Hide the Modify button and show the Save and Cancel buttons
+      $(this).hide();
+      $(`.save-budget[data-budget-allocation-id="${budgetAllocationId}"]`).show();
+      $(`.cancel-modify[data-budget-allocation-id="${budgetAllocationId}"]`).show();
+
+      // Store the current budget details as data attributes
+      var currentYear = budgetRow.data("year");
+      var currentBudget = budgetRow.data("budget");
+      var currentDescription = budgetRow.data("description");
+
+      // Create input fields with the current budget details
+      var yearInputField = `<input type="number" id="input-year-${budgetAllocationId}" value="${currentYear}" class="form-control" />`;
+      var budgetInputField = `<input type="number" id="input-budget-${budgetAllocationId}" value="${currentBudget}" class="form-control" />`;
+      var descriptionInputField = `<input type="text" id="input-description-${budgetAllocationId}" value="${currentDescription}" class="form-control" />`;
+
+      // Replace the budget details with the input fields
+      budgetRow.find("td:nth-child(2)").html(yearInputField);
+      budgetRow.find("td:nth-child(3)").html(budgetInputField);
+      budgetRow.find("td:nth-child(4)").html(descriptionInputField);
+    });
+
+    // Cancel Modify button click event
+    $(document).on("click", ".cancel-modify", function() {
+      var budgetAllocationId = $(this).data("budget-allocation-id");
+      var budgetRow = $("#budget-allocation-" + budgetAllocationId);
+
+      // Show the Modify button and hide the Save and Cancel buttons
+      $(`.modify-budget[data-budget-allocation-id="${budgetAllocationId}"]`).show();
+      $(`.save-budget[data-budget-allocation-id="${budgetAllocationId}"]`).hide();
+      $(this).hide();
+
+      // Restore the original budget details from data attributes
+      var currentYear = budgetRow.data("year");
+      var currentBudget = budgetRow.data("budget");
+      var currentDescription = budgetRow.data("description");
+
+      budgetRow.find("td:nth-child(2)").text(currentYear);
+      budgetRow.find("td:nth-child(3)").text(currentBudget);
+      budgetRow.find("td:nth-child(4)").text(currentDescription);
+    });
+
+    // Save Budget button click event
+    $(document).on("click", ".save-budget", function() {
+      var budgetButton = $(this);
+      var budgetAllocationId = budgetButton.data("budget-allocation-id");
+
+      // Get the updated budget details from the input fields
+      var updatedYear = $("#input-year-" + budgetAllocationId).val();
+      var updatedBudget = $("#input-budget-" + budgetAllocationId).val();
+      var updatedDescription = $("#input-description-" + budgetAllocationId).val();
+
+      // Perform the AJAX request to update the budget allocation
+      $.ajax({
+        url: `/update_budget/${budgetAllocationId}/`,
+        type: 'POST',
+        data: {
+          year: updatedYear,
+          budget: updatedBudget,
+          description: updatedDescription,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+          // Handle the success response
+          var budgetRow = $("#budget-allocation-" + budgetAllocationId);
+
+          // Update the budget details in the table
+          budgetRow.find("td:nth-child(2)").text(updatedYear);
+          budgetRow.find("td:nth-child(3)").text(updatedBudget);
+          budgetRow.find("td:nth-child(4)").text(updatedDescription);
+
+          // Show the Modify button and hide the Save and Cancel buttons
+          $(`.modify-budget[data-budget-allocation-id="${budgetAllocationId}"]`).show();
+          $(`.cancel-modify[data-budget-allocation-id="${budgetAllocationId}"]`).hide();
+          budgetButton.hide();
+        },
+        error: function(xhr, errmsg, err) {
+          // Handle the error response
+          console.log(xhr.status + ":" + xhr.responseText);
+        }
+      });
+    });
+
+    // Delete Budget button click event
+    $(document).on("click", ".delete-budget", function() {
+      var budgetAllocationId = $(this).data("budget-allocation-id");
+
+      // Display confirmation prompt before deleting the budget allocation
+      var confirmDelete = confirm("Are you sure you want to delete this budget allocation?");
+      if (confirmDelete) {
+        // Perform the AJAX request to delete the budget allocation
+        $.ajax({
+          url: `/delete_budget/${budgetAllocationId}/`,
+          type: 'POST',
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            // Handle the success response
+            $("#budget-allocation-" + budgetAllocationId).remove();
+          },
+          error: function(xhr, errmsg, err) {
+            // Handle the error response
+            console.log(xhr.status + ":" + xhr.responseText);
+          }
+        });
+      }
+    });
+  });
+</script>
+{% endblock javascripts %}

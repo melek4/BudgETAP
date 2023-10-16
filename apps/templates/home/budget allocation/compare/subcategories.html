@@ -1,0 +1,83 @@
+{% extends 'layouts/base.html' %}
+{% block head %}<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>{% endblock %}
+{% block title %} SubCategories Budget Comparison {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="opacity-5 breadcrumb-item text-sm">
+    Budget Comparison
+  </li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'budget_comparison_dep' %}">Directions</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'budget_comparison_subdep' year1 year2 department.id %}">SubDirections</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'budget_comparison_cat' year1 year2 subdepartment.id %}">Categories</a></li>
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'budget_comparison_subcat' year1 year2 category.id %}">SubCategories</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+
+        <div class="row">
+            <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                <h6>{{category.name}}'s SubCategories Budget Comparison for {{ year1 }} and {{ year2 }} (KDT)</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                    <thead>
+                        <tr>
+                        <th class="text-uppercase text-xs font-weight-bolder">SubCategory</th>
+                        <th class="align-middle text-center text-uppercase text-xs font-weight-bolder ps-2">Budget {{ year1 }}</th>
+                        <th class="align-middle text-center text-uppercase text-xs font-weight-bolder ps-2">Budget {{ year2 }}</th>
+                        <th class="align-middle text-center text-uppercase text-xs font-weight-bolder ps-2">Observation {{ year1 }}</th>
+                        <th class="align-middle text-center text-uppercase text-xs font-weight-bolder ps-2">Observation {{ year2 }}</th>
+                        <th class="align-middle text-center text-uppercase text-xs font-weight-bolder ps-2"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in subcat_budget_data %}
+                        <tr>
+                        <td>
+                            <div class="d-flex px-2 py-1">
+                            <div class="d-flex flex-column">
+                                <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ item.subcategory.name }}</h6>
+                            </div>
+                            </div>
+                        </td>
+                        <td class="align-middle text-center text-s ps-2">{{ item.budget1.budget|default:"N/A" }}</td>
+                        <td class="align-middle text-center text-s ps-2">{{ item.budget2.budget|default:"N/A" }}</td>
+                        <td class="align-middle text-center text-s ps-2">{{ item.budget1.description|default:"N/A" }}</td>
+                        <td class="align-middle text-center text-s ps-2">{{ item.budget2.description|default:"N/A" }}</td>
+                        <td class="align-middle text-center text-sm"><a href="{% url 'budget_comparison_subsubcat' year1 year2 item.subcategory.id %}" type="button" class="btn bg-gradient-secondary">SubSubCategories</a></td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                        <td>
+                            <div class="d-flex px-2 py-1">
+                            <div class="d-flex flex-column">
+                                <h6 class="mb-0 text-sm font-weight-bolder" style="margin:0px 10px 0px;">Total</h6>
+                            </div>
+                            </div>
+                        </td>
+                        <td class="align-middle text-center text-s font-weight-bolder ps-2">{{ total1 }}</td>
+                        <td class="align-middle text-center text-s font-weight-bolder ps-2">{{ total2 }}</td>
+                        <td class="align-middle text-center text-s font-weight-bolder ps-2"></td>
+                        <td class="align-middle text-center text-s font-weight-bolder ps-2"></td>
+                        <td class="align-middle text-center text-s font-weight-bolder ps-2"></td>
+                        </tr>
+                    </tbody>
+                    </table>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+

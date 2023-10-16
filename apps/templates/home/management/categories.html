@@ -1,0 +1,250 @@
+{% extends 'layouts/base.html' %}
+{% block head %}<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>{% endblock %}
+{% block title %} Categories {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="opacity-5 breadcrumb-item text-sm">
+    Management
+  </li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'dep_management' %}">Directions</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'subdep_management' department.id %}">SubDirections</a></li>
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'cat_management' subdepartment.id %}">Categories</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <h6>{{ subdepartment.name }}'s Categories</h6>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2"></th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                      <th class="text-secondary opacity-7"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for category in categories %}
+                    <tr id="category-{{ category.id }}" data-category-id="{{ category.id }}" data-subdepartment-id="{{ subdepartment.id }}" data-category-name="{{ category.name }}">
+                      <td>
+                        <div class="d-flex px-2 py-1">
+                          <div class="d-flex flex-column">
+                            <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ category.name }}</h6>
+                          </div>
+                        </div>
+                      </td>
+                      <td></td>
+                      <td class="align-middle text-center text-sm">
+                        <button class="delete-category btn bg-gradient-danger" data-category-id="{{ category.id }}">delete</button>
+                        <button class="modify-category btn bg-gradient-info" data-category-id="{{ category.id }}">edit</button>
+                        <a href="{% url 'subcat_management' category.id %}" type="button" class="btn subcat_manag bg-gradient-secondary" data-category-id="{{ category.id }}">subcategories</a>
+                        <button class="save-category btn" data-category-id="{{ category.id }}" style="display: none;">confirm</button>
+                        <button class="cancel-modify btn" data-category-id="{{ category.id }}" style="display: none;">cancel</button>
+                      </td>
+                      <td class="align-middle text-center"></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+              <!-- Add category button -->
+              <button id="show-add-category-form" class="btn" style="margin:20px 20px 20px;">add</button>
+
+              <!-- Add category form -->
+              <form id="add-category-form" style="display: none;">
+                <div class="form-group">
+                  <input type="text" id="category-name-input" class="form-control" placeholder="category Name" style="margin:20px 20px 20px; width:30%;">
+                </div>
+                <button type="submit" class="btn" style="margin:10px 5px 20px 20px;">confirm</button>
+                <button id="cancel-add-category" class="btn" style="margin:1 20px 20px 5px;">cancel</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+<script>
+  $(document).ready(function() {
+      // Function to add a new sub row to the table
+      function addCategoryRow(categoryId, categoryName, subdepartmentId) {
+        var categoryRow = `
+          <tr id="category-${categoryId}" data-category-name="${categoryName}" data-category-id="${categoryId}" data-subdepartment-id="${subdepartmentId}">
+            <td>
+              <div class="d-flex px-2 py-1">
+                <div class="d-flex flex-column">
+                  <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">${categoryName}</h6>
+                </div>
+              </div>
+            </td>
+            <td></td>
+            <td class="align-middle text-center text-sm">
+              <button class="delete-category btn bg-gradient-danger" data-category-id="${categoryId}">delete</button>
+              <button class="modify-category btn bg-gradient-info" data-category-id="${categoryId}">edit</button>
+              <a href="/subcat_management/${categoryId}/" type="button" class="btn subcat_manag bg-gradient-secondary" data-category-id="${categoryId}">subCategories</a>
+              <button class="save-category btn" data-category-id="${categoryId}" style="display: none;">confirm</button>
+              <button class="cancel-modify btn" data-category-id="${categoryId}" style="display: none;">cancel</button>
+            </td>
+            <td class="align-middle text-center"></td>
+          </tr>
+        `;
+        $("tbody").append(categoryRow);
+      }
+
+      // Show Add category form
+      $("#show-add-category-form").on("click", function() {
+        $("#add-category-form").show();
+      });
+
+      // Cancel Add category button click event
+      $("#cancel-add-category").on("click", function(e) {
+        e.preventDefault();
+        $("#category-name-input").val('');
+        $("#add-category-form").hide();
+      });
+
+      // Add category form submit event
+      $("#add-category-form").on("submit", function(e) {
+        e.preventDefault();
+        var categoryName = $("#category-name-input").val();
+        var subdepartmentId = "{{subdepartment.id}}";
+
+        // Perform the AJAX request to add the category
+        $.ajax({
+          url: 'create_category/',
+          type: 'POST',
+          data: {
+            subdepartment_id: subdepartmentId,
+            category_name: categoryName,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            // Handle the success response
+            var categoryId = response.category_id;
+            addCategoryRow(categoryId, categoryName, subdepartmentId);
+            $("#category-name-input").val('');
+            $("#add-category-form").hide();
+          },
+          error: function(xhr, errmsg, err) {
+            // Handle the error response
+            console.log(xhr.status + ": " + xhr.responseText);
+          }
+        });
+      });
+      // Delete category button click event
+      $(document).on("click", ".delete-category", function() {
+        var categoryId = $(this).data("category-id");
+        var categoryRow = $(this).closest("tr");
+
+        // Display confirmation prompt before deleting the category
+        var confirmDelete = confirm("Are you sure you want to delete this category?");
+        if (confirmDelete) {
+          // Perform the AJAX request to delete the category
+          $.ajax({
+            url: 'delete_category/' + categoryId + '/',
+            type: 'POST',
+            data: {
+              category_id: categoryId,
+              csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+              // Handle the success response
+              categoryRow.remove();
+            },
+            error: function(xhr, errmsg, err) {
+              // Handle the error response
+              console.log(xhr.status + ": " + xhr.responseText);
+            }
+          });
+        }
+      });
+
+      // Modify category button click event
+      $(document).on("click", ".modify-category", function() {
+        var categoryId = $(this).data("category-id");
+        var categoryRow = $("#category-" + categoryId);
+        var currentcategoryName = categoryRow.data("category-name");
+        // Hide the Modify button and show the Save and Cancel buttons
+        $(this).hide();
+        $(`.save-category[data-category-id="${categoryId}"]`).show();
+        $(`.cancel-modify[data-category-id="${categoryId}"]`).show();
+        $(`.subcat_manag[data-category-id="${categoryId}"]`).hide();
+        $(`.delete-category[data-category-id="${categoryId}"]`).hide();
+
+        // Create an input field with the current category name
+        var inputField = `<input type="text" id="input-category-name-${categoryId}" value="${currentcategoryName}" class="form-control" style="margin:0px 10px 0px; width:30%" />`;
+
+        // Replace the category name with the input field
+        $("#category-" + categoryId + " td:first-child").html(inputField);
+        // Store the current category name as a data attribute
+        categoryRow.data("category-name", currentcategoryName);
+      });
+
+      // Cancel Modify button click event
+      $(document).on("click", ".cancel-modify", function() {
+        var categoryId = $(this).data("category-id");
+        var categoryRow = $("#category-" + categoryId);
+        var categoryName = categoryRow.data("category-name");
+        // Show the Modify button and hide the Save and Cancel buttons
+        $(`.modify-category[data-category-id="${categoryId}"]`).show();
+        $(`.delete-category[data-category-id="${categoryId}"]`).show();
+        $(`.subcat_manag[data-category-id="${categoryId}"]`).show();
+        $(`.save-category[data-category-id="${categoryId}"]`).hide();
+        $(this).hide();
+
+        $("#category-" + categoryId + " td:first-child").text(categoryName);
+      });
+
+      // Save category button click event
+      $(document).on("click", ".save-category", function() {
+        var categoryId = $(this).data("category-id");
+        var subdepartmentId = "{{subdepartment.id}}";
+        // Get the updated category name from the input field
+        var updatedcategoryName = $("#input-category-name-" + categoryId).val();
+
+        // Perform the AJAX request to update the category
+        $.ajax({
+          url: 'modify_category/' + categoryId + '/',
+          type: 'POST',
+          data: {
+            subdepartment: subdepartmentId,
+            name: updatedcategoryName,
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            // Handle the success response
+            $("#category-" + categoryId + " td:first-child").text(updatedcategoryName);
+
+            // Show the Modify button and hide the Save and Cancel buttons
+            $(`.modify-category[data-category-id="${categoryId}"]`).show();
+            $(`.delete-category[data-category-id="${categoryId}"]`).show();
+            $(`.subcat_manag[data-category-id="${categoryId}"]`).show();
+            $(`.save-category[data-category-id="${categoryId}"]`).hide();
+            $(`.cancel-modify[data-category-id="${categoryId}"]`).hide();
+          },
+          error: function(xhr, errmsg, err) {
+            // Handle the error response
+            console.log(xhr.status + ":" + xhr.responseText);
+          }
+        });
+      });
+    });
+</script>
+{% endblock javascripts %}

@@ -1,0 +1,83 @@
+{% extends 'layouts/base.html' %}
+{% block head %}<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>{% endblock %}
+{% block title %} SubSubCategories' Budget {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="opacity-5 breadcrumb-item text-sm">
+    Budget Allocation
+  </li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'dep_budget_allocation' %}">Directions</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'subdep_budget_allocation' dep_id %}">SubDirections</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'cat_budget_allocation' subdep_id %}">Categories</a></li>
+  <li class="breadcrumb-item text-sm"><a class="opacity-5 text-dark" href="{% url 'subcat_budget_allocation' cat_id %}">SubCategories</a></li>
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'subsubcat_budget_allocation' subcategory.id %}">SubSubCategories</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header pb-0">
+                        <h6>{{ subcategory.name }}'s SubSubCategories' Budget</h6>
+                    </div>
+                    <div class="card-body px-0 pt-0 pb-2">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <div class="d-flex px-2 py-1">
+                                    <div class="d-flex flex-column">
+                                        <label for="year"><h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">Year</h6></label>
+                                    </div>
+                                </div>
+                                <input type="text" class="form-control" id="year" name="year" style="width:10%;margin:0px 20px 0px;" required>
+                            </div>
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">SubSubCategory</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Budget (KDT)</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subsubcategory in subsubcategories %}
+                                    <tr>
+                                        <td class="align-middle text-center">
+                                            <div class="d-flex px-2 py-1">
+                                                <div class="d-flex flex-column">
+                                                    <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ subsubcategory.name }}</h6>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <input type="text" class="form-control" name="budget-{{ subsubcategory.id }}" style="width:100%;">
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <input type="text" class="form-control" name="description-{{ subsubcategory.id }}" style="width:100%;">
+                                        </td>
+                                        <td class="align-middle text-center">
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <button type="submit" class="btn" style="margin:20px 20px 20px;">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+{% endblock javascripts %}

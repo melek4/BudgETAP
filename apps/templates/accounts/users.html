@@ -1,0 +1,235 @@
+{% extends 'layouts/base.html' %}
+{% block head %}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% endblock %}
+{% block title %} User Management {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block level %}
+  <li class="opacity-5 breadcrumb-item text-sm">
+    Management
+  </li>
+  <li class="breadcrumb-item text-sm text-dark active"><a class="text-dark" href="{% url 'users' %}">Users</a></li>
+{% endblock level %}
+
+{% block content %}
+
+    <div class="container-fluid py-4">
+
+      <div class="row">
+        <div class="col-12">
+          <div class="card mb-4">
+            <div class="card-header pb-0">
+              <h6>Users table</h6>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+              <div class="table-responsive p-0">
+                <table class="table align-items-center mb-0">
+                  <thead>
+                    <tr>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Username</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Direction</th>
+                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Role</th>
+                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Actions</th>
+                      <th class="text-secondary opacity-7"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for user in user_list %}
+                    <tr id="user-{{ user.id }}" data-user-id="{{ user.id }}" data-user-username="{{ user.username }}" data-user-email="{{ user.email }}" data-user-department="{{ user.department}}" data-user-role="{{ user.is_superuser}}">
+                      <td>
+                        <div class="d-flex px-2 py-1">
+                          <div class="d-flex flex-column">
+                            <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ user.username }}</h6>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex px-2 py-1">
+                          <div class="d-flex flex-column">
+                            <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ user.email }}</h6>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex px-2 py-1">
+                          <div class="d-flex flex-column">
+                            <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{{ user.department }}</h6>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="d-flex px-2 py-1">
+                          <div class="d-flex flex-column">
+                            <h6 class="mb-0 text-sm" style="margin:0px 10px 0px;">{% if user.is_superuser %}Admin{% else %}User{% endif %}</h6>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="align-middle text-center text-sm">
+                        <button class="delete-user btn bg-gradient-danger" data-user-id="{{ user.id }}">delete</button>
+                        <button class="modify-user btn bg-gradient-info" data-user-id="{{ user.id }}">edit</button>
+                        <button class="save-user btn" data-user-id="{{ user.id }}" style="display: none;">confirm</button>
+                        <button class="cancel-modify btn" data-user-id="{{ user.id }}" style="display: none;">cancel</button>
+                      </td>
+                      <td class="align-middle text-center"></td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% include "includes/footer.html" %}
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific JS goes HERE --> 
+{% block javascripts %}
+<script>
+  $(document).ready(function() {
+
+    // Delete User button click event
+    $(document).on("click", ".delete-user", function() {
+      var userId = $(this).data("user-id");
+
+      // Display confirmation prompt before deleting the user
+      var confirmDelete = confirm("Are you sure you want to delete this user?");
+      if (confirmDelete) {
+        // Perform the AJAX request to delete the user
+        $.ajax({
+          url: 'delete_user/' + userId + '/',
+          type: 'POST',
+          data: {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+          },
+          success: function(response) {
+            // Handle the success response
+            $("#user-" + userId).remove();
+          },
+          error: function(xhr, errmsg, err) {
+            // Handle the error response
+            console.log(xhr.status + ": " + xhr.responseText);
+          }
+        });
+      }
+    });
+
+    // Modify User button click event
+    $(document).on("click", ".modify-user", function() {
+      var userId = $(this).data("user-id");
+      var userRow = $("#user-" + userId);
+      var currentUsername = userRow.data("user-username");
+      var currentEmail = userRow.data("user-email");
+      var currentDepartment = userRow.data("user-department");
+      var currentRole = userRow.data("user-role");
+
+      // Hide the Modify button and show the Save and Cancel buttons
+      $(this).hide();
+      $(`.save-user[data-user-id="${userId}"]`).show();
+      $(`.cancel-modify[data-user-id="${userId}"]`).show();
+      $(`.delete-user[data-user-id="${userId}"]`).hide();
+
+      // Create input fields with the current user data
+      var usernameField = `<input type="text" id="input-username-${userId}" value="${currentUsername}" class="form-control" style="margin:0px 10px 0px; width:30%" />`;
+      var emailField = `<input type="email" id="input-email-${userId}" value="${currentEmail}" class="form-control" style="margin:0px 10px 0px; width:30%" />`;
+      var departmentField = `
+        <select id="department-select-${userId}" name="department" class="form-control">
+        {% for department in department_list %}
+            <option value="{{ department.id }}">{{ department.name }}</option>
+        {% endfor %}
+        </select>
+      `;
+      var roleField = `
+        <div class="form-check">
+          <input type="checkbox" id="input-is-admin-${userId}" class="form-check-input" name="is_admin" ${currentRole === "Admin" ? "checked" : ""}>
+          <label class="form-check-label" for="input-is-admin-${userId}">Admin</label>
+        </div>
+      `;
+
+      // Replace the user data with the input fields
+      $("#user-" + userId + " td:first-child").html(usernameField);
+      $("#user-" + userId + " td:nth-child(2)").html(emailField);
+      $("#user-" + userId + " td:nth-child(3)").html(departmentField);
+      $("#user-" + userId + " td:nth-child(4)").html(roleField);
+
+      // Store the current user data as data attributes
+      userRow.data("user-username", currentUsername);
+      userRow.data("user-email", currentEmail);
+      userRow.data("user-department", currentDepartment);
+      userRow.data("user-role", currentRole);
+    });
+
+    // Cancel Modify button click event
+    $(document).on("click", ".cancel-modify", function() {
+      var userId = $(this).data("user-id");
+      var userRow = $("#user-" + userId);
+      var username = userRow.data("user-username");
+      var email = userRow.data("user-email");
+      var department = userRow.data("user-department")
+      var role = userRow.data("user-role");
+
+      // Show the Modify button and hide the Save and Cancel buttons
+      $(`.modify-user[data-user-id="${userId}"]`).show();
+      $(`.delete-user[data-user-id="${userId}"]`).show();
+      $(`.save-user[data-user-id="${userId}"]`).hide();
+      $(this).hide();
+
+      // Restore the original user data
+      userRow.find("td:first-child").text(username);
+      userRow.find("td:nth-child(2)").text(email);
+      userRow.find("td:nth-child(3)").text(department);
+      if (role){userRow.find("td:nth-child(4)").text("Admin");}
+      else {userRow.find("td:nth-child(4)").text("User");}
+      
+    });
+
+    // Save User button click event
+    $(document).on("click", ".save-user", function() {
+      var userId = $(this).data("user-id");
+
+      // Get the updated user data from the input fields
+      var updatedUsername = $("#input-username-" + userId).val();
+      var updatedEmail = $("#input-email-" + userId).val();
+      var updatedDepartmentId = $("#department-select-" + userId).val();
+      var updatedRole = $("#input-is-admin-" + userId).prop('checked');
+
+      // Perform the AJAX request to update the user
+      $.ajax({
+        url: 'modify_user/' + userId + '/',
+        type: 'POST',
+        data: {
+          username: updatedUsername,
+          email: updatedEmail,
+          department_id: updatedDepartmentId,
+          is_superuser: updatedRole,
+          csrfmiddlewaretoken: '{{ csrf_token }}'
+        },
+        success: function(response) {
+          // Handle the success response
+          var userRow = $("#user-" + userId);
+          userRow.find("td:first-child").text(updatedUsername);
+          userRow.find("td:nth-child(2)").text(updatedEmail);
+          userRow.find("td:nth-child(3)").text(response.department_name);
+          userRow.find("td:nth-child(4)").text(response.role);
+
+          // Show the Modify button and hide the Save and Cancel buttons
+          $(`.modify-user[data-user-id="${userId}"]`).show();
+          $(`.delete-user[data-user-id="${userId}"]`).show();
+          $(`.save-user[data-user-id="${userId}"]`).hide();
+          $(`.cancel-modify[data-user-id="${userId}"]`).hide();
+        },
+        error: function(xhr, errmsg, err) {
+          // Handle the error response
+          console.log(xhr.status + ": " + xhr.responseText);
+        }
+      });
+    });
+  });
+</script>
+{% endblock javascripts %}
